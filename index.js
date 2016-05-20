@@ -18,6 +18,7 @@ function load(name, doNotParse) {
   return cookieVal;
 }
 
+
 function save(name, val, opt) {
   _rawCookie[name] = val;
 
@@ -37,7 +38,15 @@ function save(name, val, opt) {
 }
 
 function remove(name, opt) {
-  delete _rawCookie[name];
+  if(typeof name === 'string') {
+    delete _rawCookie[name];
+  } else if (name instanceof RegExp) {
+    var names = getCookieNames().filter(function(cookieName) { name.test(cookieName) })
+    names.forEach(function(cookieName) { remove(cookieName, opt) })
+    return
+  } else {
+    throw new Error('remove function requires a string or regex name parameter.')
+  }
 
   if (typeof opt === 'undefined') {
     opt = {};
@@ -54,6 +63,11 @@ function remove(name, opt) {
   if (_res && _res.clearCookie) {
     _res.clearCookie(name, opt);
   }
+}
+
+function getCookieNames() {
+  var cookies = (typeof document === 'undefined') ? _rawCookie : cookie.parse(document.cookie);
+  return Object.keys(cookies);
 }
 
 function setRawCookie(rawCookie) {
@@ -82,6 +96,7 @@ var reactCookie = {
   load: load,
   save: save,
   remove: remove,
+  getCookieNames: getCookieNames,
   setRawCookie: setRawCookie,
   plugToRequest: plugToRequest
 };
